@@ -1,6 +1,3 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
-
 name: dummy-landing-page
 
 on:
@@ -16,17 +13,32 @@ jobs:
         node-version: [20.x]
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v3
         with:
           clean: "false"
+
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-      - name: Install dependencies
-        run: npm i --legacy-peer-deps
+
+      - name: Install Dependencies
+        run: npm install --legacy-peer-deps
+
       - name: Build Project
-        run: CI=false npm run build-test --if-present
-      - name: Run Server
-        run: npm run pm2:start:test
+        run: CI=false npm run build --if-present
+
+      - name: Stop Existing PM2 Process
+        run: |
+          pm2 stop next-app || true
+          pm2 delete next-app || true
+
+      - name: Start Next.js App with PM2
+        run: |
+          pm2 start ecosystem.config.js
+          pm2 save
+
+      - name: Restart NGINX
+        run: sudo systemctl restart nginx
