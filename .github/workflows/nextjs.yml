@@ -5,7 +5,7 @@ name: dummy-landing-page
 
 on:
   push:
-    branches: ["test"]
+    branches: ["main"]
 
 jobs:
   build:
